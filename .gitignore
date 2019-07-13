@@ -1,0 +1,5 @@
+venv
+__pycache
+bot.log
+bot.json
+synced
