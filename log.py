@@ -14,7 +14,7 @@ logger.addHandler(fh)
 
 def log_func(func):
     """
-    a decorator to log the function call, paramete
+    a decorator to log the function call
     :return: decorated function
     """
     def _format_arg(args, kwargs):
@@ -29,7 +29,7 @@ def log_func(func):
             response = func(*args, **kwargs)
             # if return_json:
             #     response = json.dumps(response, indent=2)
-            logger.info('%s(%s)\n%s', func.__name__, _format_arg(args, kwargs), response)
+            logger.info('%s(%s)\n%s', func.__name__, _format_arg(args, kwargs), str(response))
             return response
         except Exception as e:
             logger.error('%s(%s)\n    error: %s', func.__name__, _format_arg(args, kwargs), e)
