@@ -1,16 +1,18 @@
-import bot
-from log import *
-
-import os
-from os.path import join
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from threading import Lock
 import hashlib
+import os
 import pickle
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from os.path import join
+from threading import Lock
 from time import sleep
 
-sync_interval = bot.config['sync_interval']
-sync_paths = bot.config['sync_paths']
+import bot
+import init
+from log import *
+
+_config_instance = init.get_config()
+sync_interval = _config_instance['sync_interval']
+sync_paths = _config_instance['sync_paths']
 SYNC_CACHE = []
 pool = ThreadPoolExecutor(max_workers=4)
 synced_files_md5 = set()

@@ -1,9 +1,10 @@
 import requests
+
+import init
 from log import log_func
-import json
 
 PROXY = {'http': 'http://localhost:1080', 'https': 'http://localhost:1080'}
-config_path = 'bot.json'
+config = init.get_config()
 
 
 def bot_url(method: str):
@@ -12,39 +13,6 @@ def bot_url(method: str):
 
 def file_url(file_path: str):
     return f'https://api.telegram.org/file/bot{config["token"]}/{file_path}'
-
-
-def get_config():
-    _config = dict()
-    try:
-        _config = json.load(open(config_path, 'r'))
-        if _config['chat_id'] == 0:
-            input("Please send the bot a message, then press enter")
-            try:
-                _config['chat_id'] = get_update()[-1]['chat']['id']
-                with open(config_path) as fp:
-                    json.dump(_config, fp, indent=2)
-            except IndexError:
-                input('Make sure you do have sent a message')
-        return _config
-    except FileNotFoundError:
-        _config['token'], _config['chat_id'], _config['offset'], _config['sync_paths'], _config['sync_interval']\
-            = 0, 0, 0, [], 30
-        with open('bot.json', 'w') as fp:
-            json.dump(_config, fp, indent=2)
-        print('Please input "token", "sync_path" in %s first', config_path)
-        exit(1)
-    except json.JSONDecodeError:
-        print("Failed to decode %s, delete it to initialize", config_path)
-        exit(1)
-
-
-config = get_config()
-
-
-def write_config():
-    with open('bot.json', 'w') as fp:
-        json.dump(config, fp, indent=2)
 
 
 class BotError(Exception):
@@ -74,7 +42,7 @@ def _bot_request(method: str, url: str, *args, return_type='json', **kwargs):
     if return_type == 'json':
         response = r.json()
         if not response['ok']:
-            raise BotError(f'{method} {url} not ok')
+            raise BotError(f'{method} {url} not ok', response)
         return response
     if return_type == 'raw':
         return r.content
@@ -95,7 +63,7 @@ def get_update(offset: int = None):
     new_msg = _bot_request('get', bot_url('getUpdates'), params=params)['result']
     if new_msg:
         config['offset'] = new_msg[-1]['update_id']
-    write_config()
+    init.write_config(config)
     return new_msg
 
 
@@ -145,5 +113,22 @@ def post_file(file_path: str, chat_id: str = config['chat_id']):
     return _bot_request('post', bot_url('sendDocument'), files=files, params=params)
 
 
+def _init_chat_id(_config) -> None:
+    while True:
+        try:
+            input('Send your bot any message to detect a chat, then press enter:\n')
+            print('Waiting...')
+            _config['chat_id'] = get_update(-1)[-1]['message']['chat']['id']
+            break
+        except IndexError:
+            print('Not receiving any message')
+            continue
+    print('initialization ok')
+    init.write_config(config)
+
+
+if not config['chat_id']:
+    _init_chat_id(config)
+
 if __name__ == '__main__':
-    get_update(-1)
+    pass
