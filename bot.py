@@ -3,39 +3,48 @@ from log import log_func
 import json
 
 PROXY = {'http': 'http://localhost:1080', 'https': 'http://localhost:1080'}
+config_path = 'bot.json'
 
 
 def bot_url(method: str):
-    return f'https://api.telegram.org/bot{bot["token"]}/{method}'
+    return f'https://api.telegram.org/bot{config["token"]}/{method}'
 
 
 def file_url(file_path: str):
-    return f'https://api.telegram.org/file/bot{bot["token"]}/{file_path}'
+    return f'https://api.telegram.org/file/bot{config["token"]}/{file_path}'
 
 
 def get_config():
-    _bot = dict()
+    _config = dict()
     try:
-        config = json.load(open('bot.json', 'r'))
-        _bot['token'], _bot['chat_id'], _bot['offset'] = config['token'], config['chat_id'], config['offset']
-        return _bot
+        _config = json.load(open(config_path, 'r'))
+        if _config['chat_id'] == 0:
+            input("Please send the bot a message, then press enter")
+            try:
+                _config['chat_id'] = get_update()[-1]['chat']['id']
+                with open(config_path) as fp:
+                    json.dump(_config, fp, indent=2)
+            except IndexError:
+                input('Make sure you do have sent a message')
+        return _config
     except FileNotFoundError:
-        _bot['token'], _bot['chat_id'], _bot['offset'] = 0, 0, 0
+        _config['token'], _config['chat_id'], _config['offset'], _config['sync_paths'], _config['sync_interval']\
+            = 0, 0, 0, [], 30
         with open('bot.json', 'w') as fp:
-            json.dump(_bot, fp)
-        print('Please edit config file bot.json first')
+            json.dump(_config, fp, indent=2)
+        print('Please input "token", "sync_path" in %s first', config_path)
         exit(1)
-    except json.JSONDecodeError as e:
-        print("Failed to decode bot.json", e)
+    except json.JSONDecodeError:
+        print("Failed to decode %s, delete it to initialize", config_path)
         exit(1)
 
 
-bot = get_config()
+config = get_config()
 
 
 def write_config():
     with open('bot.json', 'w') as fp:
-        json.dump(bot, fp, indent=2)
+        json.dump(config, fp, indent=2)
 
 
 class BotError(Exception):
@@ -81,11 +90,11 @@ def get_update(offset: int = None):
             {'message_id': ..., 'from': {...}, 'chat': {...}, 'date': ..., 'text': '...'}
     """
     params = {
-        'offset': offset or bot['offset'] + 1,
+        'offset': offset or config['offset'] + 1,
     }
     new_msg = _bot_request('get', bot_url('getUpdates'), params=params)['result']
     if new_msg:
-        bot['offset'] = new_msg[-1]['update_id']
+        config['offset'] = new_msg[-1]['update_id']
     write_config()
     return new_msg
 
@@ -114,7 +123,7 @@ def get_file(file_id: int, local_save_path=None):
 
 
 @log_func
-def send_text(text: str, chat_id: int = bot['chat_id']):
+def send_text(text: str, chat_id: int = config['chat_id']):
     params = {
         'chat_id': chat_id,
         'text': text,
@@ -123,18 +132,18 @@ def send_text(text: str, chat_id: int = bot['chat_id']):
 
 
 @log_func
-def post_img(file_path: str, chat_id: str = bot['chat_id']):
+def post_img(file_path: str, chat_id: str = config['chat_id']):
     params = {'chat_id': chat_id}
     files = {'photo': open(file_path, 'rb')}
     return _bot_request('post', bot_url('sendPhoto'), files=files, params=params)
 
 
 @log_func
-def post_file(file_path: str, chat_id: str = bot['chat_id']):
+def post_file(file_path: str, chat_id: str = config['chat_id']):
     params = {'chat_id': chat_id}
     files = {'document': open(file_path, 'rb')}
     return _bot_request('post', bot_url('sendDocument'), files=files, params=params)
 
 
 if __name__ == '__main__':
-    post_file('test.png')
+    get_update(-1)

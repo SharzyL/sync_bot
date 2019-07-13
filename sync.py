@@ -1,4 +1,6 @@
 import bot
+from log import *
+
 import os
 from os.path import join
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -6,12 +8,9 @@ from threading import Lock
 import hashlib
 import pickle
 from time import sleep
-from log import *
 
-SYNC_PATHS = [
-    'C:\\Users\\Sharz\\Pictures\\sync'
-]
-SYNC_INTERVAL = 5  # time interval after each check
+sync_interval = bot.config['sync_interval']
+sync_paths = bot.config['sync_paths']
 SYNC_CACHE = []
 pool = ThreadPoolExecutor(max_workers=4)
 synced_files_md5 = set()
@@ -62,7 +61,7 @@ def update() -> None:
                 return None
         return _hash_val
 
-    files = [join(path, file) for path in SYNC_PATHS for file in os.listdir(path)]
+    files = [join(path, file) for path in sync_paths for file in os.listdir(path)]
     if files == SYNC_CACHE:
         logger.info('%s :No update detected')
         return
@@ -89,4 +88,4 @@ def update() -> None:
 if __name__ == '__main__':
     while True:
         update()
-        sleep(SYNC_INTERVAL)
+        sleep(sync_interval)
