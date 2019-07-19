@@ -92,29 +92,35 @@ def get_file(file_id: int, local_save_path=None):
 
 
 @log_func(logger)
-def send_text(text: str, chat_id: int = config['chat_id']):
-    params = {
-        'chat_id': chat_id,
-        'text': text,
-    }
-    return _bot_request('get', bot_url('sendMessage'), params=params)
+def send_text(text: str, **kwargs):
+    if 'chat_id' not in kwargs:
+        kwargs['chat_id'] = config['chat_id']
+    kwargs['text'] = text
+    return _bot_request('get', bot_url('sendMessage'), params=kwargs)
 
 
 @log_func(logger)
-def post_img(file_path: str, chat_id: str = config['chat_id']):
-    params = {'chat_id': chat_id}
+def post_img(file_path: str, **kwargs):
+    if 'chat_id' not in kwargs:
+        kwargs['chat_id'] = config['chat_id']
     files = {'photo': open(file_path, 'rb')}
-    return _bot_request('post', bot_url('sendPhoto'), files=files, params=params)
+    return _bot_request('post', bot_url('sendPhoto'), files=files, params=kwargs)
 
 
 @log_func(logger)
-def post_file(file_path: str, chat_id: str = config['chat_id']):
-    params = {'chat_id': chat_id}
+def post_file(file_path: str, **kwargs):
+    if 'chat_id' not in kwargs:
+        kwargs['chat_id'] = config['chat_id']
     files = {'document': open(file_path, 'rb')}
-    return _bot_request('post', bot_url('sendDocument'), files=files, params=params)
+    return _bot_request('post', bot_url('sendDocument'), files=files, params=kwargs)
 
 
 def _init_chat_id(_config) -> None:
+    """
+    if config is not initialized with chat_id entry, interactively initialize it
+    :param _config: a config object
+    :return: None
+    """
     while True:
         try:
             input('Send your bot any message to detect a chat, then press enter:\n')
