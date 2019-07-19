@@ -62,6 +62,10 @@ def _init_config() -> map:
 
 
 def get_config() -> map:
+    """
+    using single-instance model to handle config object
+    :return: instance of config object
+    """
     global _config_instance
     if _config_instance:
         return _config_instance

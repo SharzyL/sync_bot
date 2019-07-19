@@ -3,3 +3,5 @@ __pycache
 bot.log
 bot.json
 synced
+pixiv
+*.log

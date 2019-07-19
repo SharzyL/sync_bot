@@ -10,6 +10,7 @@ import bot
 import init
 from log import *
 
+logger = get_logger('bot')
 _config_instance = init.get_config()
 sync_interval = _config_instance['sync_interval']
 sync_paths = _config_instance['sync_paths']

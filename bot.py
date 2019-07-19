@@ -1,10 +1,11 @@
 import requests
 
 import init
-from log import log_func
+from log import *
 
 PROXY = {'http': 'http://localhost:1080', 'https': 'http://localhost:1080'}
 config = init.get_config()
+logger = get_logger('bot')
 
 
 def bot_url(method: str):
@@ -50,7 +51,7 @@ def _bot_request(method: str, url: str, *args, return_type='json', **kwargs):
         return r.content.decode()
 
 
-@log_func
+@log_func(logger)
 def get_update(offset: int = None):
     """
     Fetch recent received messages by offset
@@ -75,7 +76,7 @@ def _get_file_path(file_id: int):
     return response['result']['file_path']
 
 
-@log_func
+@log_func(logger)
 def get_file(file_id: int, local_save_path=None):
     """
     :param file_id:
@@ -90,7 +91,7 @@ def get_file(file_id: int, local_save_path=None):
     return file.content
 
 
-@log_func
+@log_func(logger)
 def send_text(text: str, chat_id: int = config['chat_id']):
     params = {
         'chat_id': chat_id,
@@ -99,14 +100,14 @@ def send_text(text: str, chat_id: int = config['chat_id']):
     return _bot_request('get', bot_url('sendMessage'), params=params)
 
 
-@log_func
+@log_func(logger)
 def post_img(file_path: str, chat_id: str = config['chat_id']):
     params = {'chat_id': chat_id}
     files = {'photo': open(file_path, 'rb')}
     return _bot_request('post', bot_url('sendPhoto'), files=files, params=params)
 
 
-@log_func
+@log_func(logger)
 def post_file(file_path: str, chat_id: str = config['chat_id']):
     params = {'chat_id': chat_id}
     files = {'document': open(file_path, 'rb')}
