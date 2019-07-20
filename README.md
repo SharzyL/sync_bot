@@ -9,4 +9,5 @@ A bot to sync your file to your telegram chat
 
 Follow the instruction to initialize the bot (not needed when used next time)
 
-If you want to reinitialize the bot, simply delete `bot.json` and `python sync.py` again
+If you want to reinitialize the bot, simply delete `bot.json` and `sync.json`, 
+then run`python sync.py` again

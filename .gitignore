@@ -1,7 +1,6 @@
 venv
 __pycache
-bot.log
-bot.json
+*.json
 synced
 pixiv
 *.log

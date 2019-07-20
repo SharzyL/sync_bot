@@ -76,6 +76,7 @@ def get_collections(uid: int):
     url = f'https://www.pixiv.net/ajax/user/{uid}/illusts/bookmarks?tag=&offset=0&limit=100000&rest=show'
     req = requests.get(url, headers=HEADER).json()
     if req['error']:
+        logger.error('Failed to fetch collection data')
         raise ConnectionError('Invalid request', url)
     works = req['body']['works']
     length = len(works)
@@ -96,4 +97,4 @@ def sync_to_local(uid):
 
 
 if __name__ == '__main__':
-    sync_to_local(11980598)
+    pass

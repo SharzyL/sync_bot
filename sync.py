@@ -1,20 +1,50 @@
 import hashlib
+import json
 import os
 import pickle
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from os.path import join
 from threading import Lock
 from time import sleep
+
 import bot
-import init
 from log import *
 
-logger = get_logger('bot')
-_config_instance = init.get_config()
-sync_interval = _config_instance['sync_interval']
-sync_paths = _config_instance['sync_paths']
+
+def init_config():
+    _config = {}
+    seconds = int(input('How many seconds between every sync check?\n'))
+    chat_name = input('Which chat you want to sync to?\n')
+    paths = []
+    while True:
+        path = input('Tell me a path you want to sync\n')
+        paths.append(path)
+        _ = input('any more? (y / n)\n')
+        if _ == 'y':
+            continue
+        else:
+            break
+    return {'sync_interval': seconds, 'chat_name': chat_name, 'sync_paths': paths}
+
+
+def pickle_config(config):
+    with open('sync.json', 'w') as fp:
+        json.dump(config, fp, indent=2)
+
+
+logger = get_logger('sync')
+try:
+    with open('sync.json', 'r') as _fp:
+        config = json.load(_fp)
+except FileNotFoundError:
+    config = init_config()
+    pickle_config(config)
+
+sync_bot = bot.get_bot()
+sync_interval = config['sync_interval']
+sync_paths = config['sync_paths']
 SYNC_CACHE = []
-pool = ThreadPoolExecutor(max_workers=4)
+pool = ThreadPoolExecutor(max_workers=5)
 synced_files_md5 = set()
 try:
     with open('synced', 'rb') as synced:
@@ -54,7 +84,7 @@ def update() -> None:
         _hash_val = _hash_file(file_path)
         if _hash_val not in synced_files_md5:
             try:
-                bot.post_file(file_path)
+                sync_bot.post_file(file_path)
                 logger.info('Succeeded to upload file %s', file_path)
                 lock.acquire()
                 synced_files_md5.add(_hash_val)
